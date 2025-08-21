@@ -24,27 +24,22 @@ export const ChatWindow = () => {
         }
 
         try {
-            // Converte a chave pública do destinatário de Base64 para Uint8Array
             const recipientPublicKey = libsodium.from_base64(recipient.publicKey);
-
-            // Criptografa a mensagem
             const encryptedContent = await encryptMessage(text, privateKey, recipientPublicKey);
 
-            // Emite o evento para o backend
             socket.emit('sendMessage', {
                 toUserId: activeChatUserId,
                 encryptedContent,
             });
 
-            // Adiciona a mensagem à UI localmente para feedback instantâneo
             addMessage(activeChatUserId, {
-                id: new Date().toISOString(), // ID temporário
+                id: new Date().toISOString(),
                 content: text,
                 isMine: true,
                 timestamp: new Date().toISOString(),
             });
 
-            setText(''); // Limpa o campo de texto
+            setText('');
         } catch (error) {
             console.error("Erro ao criptografar ou enviar mensagem:", error);
         }
@@ -52,8 +47,11 @@ export const ChatWindow = () => {
 
     const getContactUsername = (userId: string | null) => {
         if (!userId) return '';
-        const contact = contacts.find(c => c.addressee.id === userId || c.requester.id === userId);
-        if (!contact) return userId; // fallback para ID se não encontrar
+        const contact = contacts.find(c => {
+            if (!c) return false;
+            return c.addressee?.id === userId || c.requester?.id === userId;
+        });
+        if (!contact) return userId;
         return contact.addressee.id === userId ? contact.addressee.username : contact.requester.username;
     }
 

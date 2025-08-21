@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { useSessionStore } from './session';
-import {jwtDecode} from "jwt-decode"; // Importar a loja de sessão para o logout
-
+import { jwtDecode } from 'jwt-decode';
 
 interface UserPayload {
     userId: string;
@@ -22,7 +21,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     login: (token) => {
         try {
-            // Descodifica o token para extrair as informações do utilizador
             const decoded: { sub: string, username: string } = jwtDecode(token);
             const userPayload: UserPayload = {
                 userId: decoded.sub,

@@ -17,6 +17,7 @@
     "@tanstack/react-query": "^5.85.5",
     "@tanstack/react-router": "^1.131.27",
     "@tanstack/router-vite-plugin": "^1.131.27",
+    "@types/libsodium-wrappers": "^0.7.14",
     "@types/uuid": "^10.0.0",
     "axios": "^1.11.0",
     "jwt-decode": "^4.0.0",

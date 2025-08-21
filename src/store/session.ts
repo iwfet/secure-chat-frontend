@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
+import libsodium from 'libsodium-wrappers';
+
 
 interface SessionState {
     publicKey: Uint8Array | null;
@@ -16,8 +18,7 @@ export const useSessionStore = create<SessionState>((set) => ({
     socket: null,
     setKeys: (publicKey, privateKey) => set({ publicKey, privateKey }),
     connectSocket: (token, publicKey) => {
-        // Converte a chave pública para um formato enviável (Base64)
-        const publicKeyB64 = btoa(String.fromCharCode.apply(null, Array.from(publicKey)));
+        const publicKeyB64 = libsodium.to_base64(publicKey);
 
         const newSocket = io('http://localhost:5000', {
             auth: {

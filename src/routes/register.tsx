@@ -1,15 +1,12 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import api from '../api';
-// Adicione Link as MuiLink aqui também
 import { Box, Button, TextField, Typography, Container, Link as MuiLink } from '@mui/material';
-
 
 export const Route = createFileRoute('/register')({
     component: RegisterComponent,
 });
 
 function RegisterComponent() {
-    // ... (o resto da função handleSubmit permanece o mesmo) ...
     const navigate = useNavigate();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -68,7 +65,6 @@ function RegisterComponent() {
                     >
                         [ Registrar ]
                     </Button>
-                    {/* Este link agora funcionará */}
                     <MuiLink component={Link} to="/login" variant="body2">
                         Já tem uma conta? [ Login ]
                     </MuiLink>

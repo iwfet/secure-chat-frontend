@@ -4,11 +4,11 @@ export const hackerTheme = createTheme({
     palette: {
         mode: 'dark',
         primary: {
-            main: '#ffffff', // Branco
+            main: '#ffffff',
         },
         background: {
-            default: '#000000', // Fundo preto
-            paper: '#1a1a1a',   // Um cinza escuro para superfícies como cards
+            default: '#000000',
+            paper: '#1a1a1a',
         },
         text: {
             primary: '#ffffff',

@@ -1,22 +1,20 @@
 import  { useState, useEffect } from 'react';
 import {
     Box, Typography, List, ListItem, ListItemText, ListItemAvatar, Avatar, Divider, Badge, TextField,
-    CircularProgress, IconButton, Paper, InputAdornment
+    CircularProgress, IconButton, Paper, InputAdornment, ListItemButton
 } from '@mui/material';
-import { Search, Add, Check, Close, Logout } from '@mui/icons-material';
-import { useAuthStore } from '../store/auth'; // A importação mais importante para esta correção
+import { Search, Add, Check, Close, Logout, Refresh } from '@mui/icons-material';
+import { useAuthStore } from '../store/auth';
 import { useNavigate } from '@tanstack/react-router';
 import api from '../api';
 import type {Contact} from "../store/chat.ts";
 import {useChatStore} from "../store/chat.ts";
 
-// Interface para os resultados da busca de utilizadores
 interface SearchResult {
     id: string;
     username: string;
 }
 
-// Função para gerar um URL de avatar com base no nome do utilizador
 const getAvatarUrl = (seed: string) => `https://api.dicebear.com/8.x/bottts/svg?seed=${seed}`;
 
 export const Sidebar = () => {
@@ -24,8 +22,6 @@ export const Sidebar = () => {
         contacts, setContacts, onlineUsers, pendingRequests,
         setPendingRequests, setActiveChat
     } = useChatStore();
-
-    // CORREÇÃO: Obter o utilizador logado (incluindo o ID) do estado de autenticação
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
 
@@ -34,29 +30,28 @@ export const Sidebar = () => {
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
 
-    // Efeito para buscar os dados iniciais (contactos e solicitações)
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const [contactsRes, pendingRes] = await Promise.all([
-                    api.get('/contacts'),
-                    api.get('/contacts/requests/pending'),
-                ]);
-                setContacts(Array.isArray(contactsRes.data) ? contactsRes.data : []);
-                setPendingRequests(Array.isArray(pendingRes.data) ? pendingRes.data : []);
-            } catch (error) {
-                console.error("Erro ao buscar dados da sidebar:", error);
-                setContacts([]);
-                setPendingRequests([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, [setContacts, setPendingRequests]);
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [contactsRes, pendingRes] = await Promise.all([
+                api.get('/contacts'),
+                api.get('/contacts/requests/pending'),
+            ]);
+            setContacts(Array.isArray(contactsRes.data) ? contactsRes.data : []);
+            setPendingRequests(Array.isArray(pendingRes.data) ? pendingRes.data : []);
+        } catch (error) {
+            console.error("Erro ao buscar dados da sidebar:", error);
+            setContacts([]);
+            setPendingRequests([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    // Função para buscar utilizadores na API
+    useEffect(() => {
+        fetchData();
+    }, []);
+
     const handleSearch = async (query: string) => {
         setSearchQuery(query);
         if (query.length < 3) {
@@ -66,7 +61,6 @@ export const Sidebar = () => {
         try {
             setIsSearching(true);
             const res = await api.get(`/users/search?username=${query}`);
-            // CORREÇÃO: Filtra os resultados para não mostrar o próprio utilizador logado
             if (user?.userId) {
                 setSearchResults(res.data.filter((u: SearchResult) => u.id !== user.userId));
             } else {
@@ -79,7 +73,6 @@ export const Sidebar = () => {
         }
     };
 
-    // Função para enviar uma solicitação de contacto
     const handleSendRequest = async (addresseeId: string) => {
         try {
             await api.post('/contacts/requests', { addresseeId });
@@ -90,7 +83,6 @@ export const Sidebar = () => {
         }
     };
 
-    // Função para aceitar ou rejeitar uma solicitação
     const handleRequestResponse = async (contactId: string, action: 'accept' | 'reject') => {
         try {
             await api.put(`/contacts/requests/${contactId}/${action}`);
@@ -104,9 +96,7 @@ export const Sidebar = () => {
         }
     };
 
-    // Helper para extrair os dados do outro utilizador num objeto de contacto
     const getContactDisplay = (contact: Contact) => {
-        // CORREÇÃO: Usa o ID do utilizador logado para determinar quem é o "outro" no contacto.
         const otherUser = contact.requester.id !== user?.userId ? contact.requester : contact.addressee;
         return {
             id: otherUser.id,
@@ -130,7 +120,6 @@ export const Sidebar = () => {
                 flexDirection: 'column',
             }}
         >
-            {/* --- SEÇÃO DE BUSCA --- */}
             <Box p={2}>
                 <Typography variant="h6" gutterBottom>[ Adicionar Contato ]</Typography>
                 <TextField
@@ -158,10 +147,14 @@ export const Sidebar = () => {
             </Box>
             <Divider />
 
-            {/* --- SEÇÃO DE SOLICITAÇÕES PENDENTES --- */}
             {Array.isArray(pendingRequests) && pendingRequests.length > 0 && (
                 <>
-                    <Box p={2}><Typography variant="h6">[ Solicitações Pendentes ]</Typography></Box>
+                    <Box p={2} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h6">[ Solicitações Pendentes ]</Typography>
+                        <IconButton onClick={fetchData} size="small" title="Recarregar dados">
+                            <Refresh />
+                        </IconButton>
+                    </Box>
                     <List dense sx={{ overflowY: 'auto', flexShrink: 0 }}>
                         {pendingRequests.map(req => (
                             <ListItem key={req.id} secondaryAction={
@@ -179,14 +172,20 @@ export const Sidebar = () => {
                 </>
             )}
 
-            {/* --- SEÇÃO DE CONTATOS --- */}
-            <Box p={2}><Typography variant="h6">[ Contatos ]</Typography></Box>
+            <Box p={2} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h6">[ Contatos ]</Typography>
+                {(!pendingRequests || pendingRequests.length === 0) && (
+                    <IconButton onClick={fetchData} size="small" title="Recarregar dados">
+                        <Refresh />
+                    </IconButton>
+                )}
+            </Box>
             <List sx={{ flexGrow: 1, overflowY: 'auto' }}>
                 {loading ? <CircularProgress sx={{ mx: 'auto', mt: 4 }} /> : (Array.isArray(contacts) && contacts.map((contact) => {
                     const displayUser = getContactDisplay(contact);
                     const isOnline = !!onlineUsers[displayUser.id];
                     return (
-                        <ListItem button key={contact.id} onClick={() => setActiveChat(displayUser.id)}>
+                        <ListItemButton key={contact.id} onClick={() => setActiveChat(displayUser.id)}>
                             <ListItemAvatar>
                                 <Badge overlap="circular" anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} variant="dot"
                                        sx={{
@@ -203,13 +202,12 @@ export const Sidebar = () => {
                                 </Badge>
                             </ListItemAvatar>
                             <ListItemText primary={displayUser.username} />
-                        </ListItem>
+                        </ListItemButton>
                     )
                 }))}
             </List>
             <Divider />
 
-            {/* --- SEÇÃO DO UTILIZADOR E LOGOUT --- */}
             <Box p={2}>
                 <Paper sx={{ p: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>

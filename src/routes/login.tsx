@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useAuthStore } from '../store/auth';
-import { useSessionStore } from '../store/session'; // Importar a nova loja
-import { generateKeyPair } from '../lib/crypto'; // Importar a função de cripto
+import { useSessionStore } from '../store/session';
+import { generateKeyPair } from '../lib/crypto';
 import api from '../api';
 import { Box, Button, TextField, Typography, Container, Link as MuiLink } from '@mui/material';
 
@@ -12,7 +12,7 @@ export const Route = createFileRoute('/login')({
 function LoginComponent() {
     const navigate = useNavigate();
     const login = useAuthStore((state) => state.login);
-    const { setKeys, connectSocket } = useSessionStore(); // Obter funções da loja de sessão
+    const { setKeys, connectSocket } = useSessionStore();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -21,28 +21,22 @@ function LoginComponent() {
         const password = formData.get('password') as string;
 
         try {
-            // 1. Autenticação via API
             const response = await api.post('/auth/login', { username, password });
             const token = response.data.access_token;
             login(token);
 
-            // 2. Geração das chaves efêmeras
             const keyPair = await generateKeyPair();
             setKeys(keyPair.publicKey, keyPair.privateKey);
 
-            // 3. Conexão do Socket com a chave pública
             connectSocket(token, keyPair.publicKey);
 
-            // 4. Navegação para o chat
             navigate({ to: '/' });
         } catch (error) {
             console.error('Falha no login', error);
-            // Adicionar feedback de erro para o usuário aqui
         }
     };
 
     return (
-        // ... O JSX do componente permanece o mesmo ...
         <Container component="main" maxWidth="xs">
             <Box
                 sx={{
