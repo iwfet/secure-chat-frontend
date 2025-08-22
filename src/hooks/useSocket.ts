@@ -32,10 +32,21 @@ export const useSocket = () => {
             }
         };
 
+        const showNotification = (title: string, body: string) => {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, { body, icon: '/icon-192.png' });
+            }
+        };
+
         const handleNewMessage = async (message: MessagePayload) => {
             const { privateKey } = useSessionStore.getState();
-            const { onlineUsers, addMessage, activeChatUserId, incrementUnreadCount } =
-                useChatStore.getState();
+            const {
+                onlineUsers,
+                addMessage,
+                activeChatUserId,
+                incrementUnreadCount,
+                contacts,
+            } = useChatStore.getState();
 
             if (!privateKey) return;
             const sender = onlineUsers[message.fromUserId];
@@ -54,6 +65,23 @@ export const useSocket = () => {
                     timestamp: message.createdAt,
                 };
                 addMessage(message.fromUserId, newMessage);
+
+                if (document.hidden || message.fromUserId !== activeChatUserId) {
+                    const senderContact = contacts.find(
+                        (c) =>
+                            c.requester.id === message.fromUserId ||
+                            c.addressee.id === message.fromUserId,
+                    );
+                    const senderUsername =
+                        senderContact?.requester.id === message.fromUserId
+                            ? senderContact?.requester.username
+                            : senderContact?.addressee.username;
+
+                    showNotification(
+                        `[NOVA TRANSMISSÃO DE: ${senderUsername || 'DESCONHECIDO'}]`,
+                        decryptedContent,
+                    );
+                }
 
                 if (message.fromUserId !== activeChatUserId) {
                     incrementUnreadCount(message.fromUserId);

@@ -155,7 +155,7 @@ export const Sidebar = () => {
         >
             <Box p={2}>
                 <Typography variant="h6" gutterBottom>
-                    [ Adicionar Contato ]
+                    [ INJETAR NOVO CONTATO ]
                 </Typography>
                 <TextField
                     fullWidth
@@ -217,7 +217,7 @@ export const Sidebar = () => {
                             alignItems: 'center',
                         }}
                     >
-                        <Typography variant="h6">[ Solicitações Pendentes ]</Typography>
+                        <Typography variant="h6">[ PEDIDOS PENDENTES ]</Typography>
                         <IconButton onClick={fetchData} size="small" title="Recarregar dados">
                             <Refresh />
                         </IconButton>
@@ -267,7 +267,7 @@ export const Sidebar = () => {
                     alignItems: 'center',
                 }}
             >
-                <Typography variant="h6">[ Contatos ]</Typography>
+                <Typography variant="h6">[ CONEXÕES SEGURAS ]</Typography>
                 {(!pendingRequests || pendingRequests.length === 0) && (
                     <IconButton onClick={fetchData} size="small" title="Recarregar dados">
                         <Refresh />

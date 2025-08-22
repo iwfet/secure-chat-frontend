@@ -92,10 +92,10 @@ function LoginComponent() {
                         variant="outlined"
                         sx={{ mt: 3, mb: 2 }}
                     >
-                        [ Authenticate ]
+                        [ INICIAR_SESSÃO.EXE ]
                     </Button>
                     <MuiLink component={Link} to="/register" variant="body2">
-                        Não tem uma conta? [ Crie uma ]
+                        Não possui credenciais? [ Criar Identidade ]
                     </MuiLink>
                 </Box>
             </Box>

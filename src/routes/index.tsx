@@ -37,6 +37,9 @@ function ChatLayout() {
             setInfoModalOpen(true);
             sessionStorage.removeItem('showSecurityInfo');
         }
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
     }, []);
 
     return (
