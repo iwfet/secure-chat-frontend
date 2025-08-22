@@ -1,10 +1,11 @@
-import {createFileRoute, redirect, useNavigate} from '@tanstack/react-router';
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { useAuthStore } from '../store/auth';
 import { Box } from '@mui/material';
 import { Sidebar } from '../components/Sidebar';
 import { useSocket } from '../hooks/useSocket';
 import { ChatWindow } from '../components/ChatWindow';
-import {useEffect} from "react";
+import { useEffect, useState } from 'react';
+import { SecurityInfoModal } from '../components/SecurityInfoModal';
 
 export const Route = createFileRoute('/')({
     beforeLoad: async () => {
@@ -22,6 +23,7 @@ function ChatLayout() {
     useSocket();
     const { isAuthenticated } = useAuthStore();
     const navigate = useNavigate();
+    const [infoModalOpen, setInfoModalOpen] = useState(false);
 
     useEffect(() => {
         if (!isAuthenticated) {
@@ -29,10 +31,30 @@ function ChatLayout() {
         }
     }, [isAuthenticated, navigate]);
 
+    useEffect(() => {
+        const shouldShowInfo = sessionStorage.getItem('showSecurityInfo');
+        if (shouldShowInfo === 'true') {
+            setInfoModalOpen(true);
+            sessionStorage.removeItem('showSecurityInfo');
+        }
+    }, []);
+
     return (
-        <Box sx={{ display: 'flex', height: '100vh', bgcolor: 'background.default' }}>
-            <Sidebar />
-            <ChatWindow />
-        </Box>
+        <>
+            <Box
+                sx={{
+                    display: 'flex',
+                    height: '100vh',
+                    bgcolor: 'background.default',
+                }}
+            >
+                <Sidebar />
+                <ChatWindow />
+            </Box>
+            <SecurityInfoModal
+                open={infoModalOpen}
+                onClose={() => setInfoModalOpen(false)}
+            />
+        </>
     );
 }
