@@ -10,6 +10,7 @@ export interface Contact {
 export interface OnlineUser {
     userId: string;
     publicKey: string;
+    socketId: string;
 }
 
 export interface Message {

@@ -40,13 +40,13 @@ export const useSocket = () => {
         socket.on('connect', () => console.log('[Socket] Conectado com ID:', socket.id));
         socket.on('disconnect', () => console.log('[Socket] Desconectado'));
 
-        socket.on('presenceUpdate', (data: { userId: string; status: 'online' | 'offline'; publicKey?: string }) => {
-            if (data.status === 'online' && data.publicKey) {
-                addOnlineUser({ userId: data.userId, publicKey: data.publicKey });
+        socket.on('presenceUpdate', (data: { userId: string; status: 'online' | 'offline'; publicKey?: string, socketId?: string }) => {
+            if (data.status === 'online' && data.publicKey && data.socketId) {
+                addOnlineUser({ userId: data.userId, publicKey: data.publicKey, socketId: data.socketId });
             } else {
                 removeOnlineUser(data.userId);
             }
-        });
+        });;
 
         socket.on('onlineContacts', (onlineContacts: OnlineUser[]) => {
             onlineContacts.forEach(addOnlineUser);

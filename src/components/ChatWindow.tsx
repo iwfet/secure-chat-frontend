@@ -30,7 +30,7 @@ export const ChatWindow = () => {
             const encryptedContent = await encryptMessage(text, privateKey, recipientPublicKey);
 
             socket.emit('sendMessage', {
-                toUserId: activeChatUserId,
+                toSocketId: recipient.socketId,
                 encryptedContent,
             });
 

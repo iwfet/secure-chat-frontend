@@ -1,14 +1,13 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
-import libsodium from 'libsodium-wrappers';
-
+import { exportPublicKey } from '../lib/crypto'; // Importar a nova função
 
 interface SessionState {
-    publicKey: Uint8Array | null;
-    privateKey: Uint8Array | null;
+    publicKey: CryptoKey | null; // Alterado
+    privateKey: CryptoKey | null; // Alterado
     socket: Socket | null;
-    setKeys: (publicKey: Uint8Array, privateKey: Uint8Array) => void;
-    connectSocket: (token: string, publicKey: Uint8Array) => void;
+    setKeys: (publicKey: CryptoKey, privateKey: CryptoKey) => void; // Alterado
+    connectSocket: (token: string, publicKey: CryptoKey) => void; // Alterado
     disconnectSocket: () => void;
 }
 
@@ -17,8 +16,8 @@ export const useSessionStore = create<SessionState>((set) => ({
     privateKey: null,
     socket: null,
     setKeys: (publicKey, privateKey) => set({ publicKey, privateKey }),
-    connectSocket: (token, publicKey) => {
-        const publicKeyB64 = libsodium.to_base64(publicKey);
+    connectSocket: async (token, publicKey) => { // Tornar a função async
+        const publicKeyB64 = await exportPublicKey(publicKey); // Usar a nova função
 
         const newSocket = io('http://localhost:5000', {
             auth: {
