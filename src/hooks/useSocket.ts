@@ -21,13 +21,21 @@ interface NewContactPayload {
 
 export const useSocket = () => {
     const { socket } = useSessionStore();
+    const { logout, isAuthenticated } = useAuthStore();
 
     useEffect(() => {
         if (!socket) return;
 
+        const handleSocketError = (error: Error) => {
+            if (isAuthenticated) {
+                logout();
+            }
+        };
+
         const handleNewMessage = async (message: MessagePayload) => {
             const { privateKey } = useSessionStore.getState();
-            const { onlineUsers, addMessage } = useChatStore.getState();
+            const { onlineUsers, addMessage, activeChatUserId, incrementUnreadCount } =
+                useChatStore.getState();
 
             if (!privateKey) return;
             const sender = onlineUsers[message.fromUserId];
@@ -46,6 +54,10 @@ export const useSocket = () => {
                     timestamp: message.createdAt,
                 };
                 addMessage(message.fromUserId, newMessage);
+
+                if (message.fromUserId !== activeChatUserId) {
+                    incrementUnreadCount(message.fromUserId);
+                }
             } catch (error) {
                 // Silently ignore
             }
@@ -103,6 +115,7 @@ export const useSocket = () => {
             }
         };
 
+        // Listeners de eventos normais
         socket.on('connect', () => console.log('[Socket] Conectado com ID:', socket.id));
         socket.on('disconnect', () => console.log('[Socket] Desconectado'));
         socket.on('newMessage', handleNewMessage);
@@ -111,6 +124,11 @@ export const useSocket = () => {
         socket.on('newContactRequest', handleNewContactRequest);
         socket.on('newContactAccepted', handleNewContactAccepted);
 
+        // Listeners de erro que acionam o logout
+        socket.on('connect_error', handleSocketError);
+        socket.on('error', handleSocketError);
+
+        // Limpeza
         return () => {
             socket.off('connect');
             socket.off('disconnect');
@@ -119,6 +137,9 @@ export const useSocket = () => {
             socket.off('onlineContacts', handleOnlineContacts);
             socket.off('newContactRequest', handleNewContactRequest);
             socket.off('newContactAccepted', handleNewContactAccepted);
+
+            socket.off('connect_error', handleSocketError);
+            socket.off('error', handleSocketError);
         };
-    }, [socket]);
-};
+    }, [socket, logout]);
+}

@@ -26,12 +26,14 @@ interface ChatState {
     onlineUsers: Record<string, OnlineUser>;
     activeChatUserId: string | null;
     messages: Record<string, Message[]>;
+    unreadCount: Record<string, number>;
     setContacts: (contacts: Contact[]) => void;
     setPendingRequests: (requests: Contact[]) => void;
     addOnlineUser: (user: OnlineUser) => void;
     removeOnlineUser: (userId: string) => void;
     setActiveChat: (userId: string | null) => void;
     addMessage: (userId: string, message: Message) => void;
+    incrementUnreadCount: (userId: string) => void;
     clearChatState: () => void;
 }
 
@@ -41,6 +43,7 @@ export const useChatStore = create<ChatState>((set) => ({
     onlineUsers: {},
     activeChatUserId: null,
     messages: {},
+    unreadCount: {},
     setContacts: (contacts) => set({ contacts }),
     setPendingRequests: (requests) => set({ pendingRequests: requests }),
     addOnlineUser: (user) =>
@@ -53,7 +56,14 @@ export const useChatStore = create<ChatState>((set) => ({
             delete newOnlineUsers[userId];
             return { onlineUsers: newOnlineUsers };
         }),
-    setActiveChat: (userId) => set({ activeChatUserId: userId }),
+    setActiveChat: (userId) =>
+        set((state) => {
+            const newUnreadCount = { ...state.unreadCount };
+            if (userId) {
+                delete newUnreadCount[userId];
+            }
+            return { activeChatUserId: userId, unreadCount: newUnreadCount };
+        }),
     addMessage: (userId, message) =>
         set((state) => ({
             messages: {
@@ -61,11 +71,20 @@ export const useChatStore = create<ChatState>((set) => ({
                 [userId]: [...(state.messages[userId] || []), message],
             },
         })),
-    clearChatState: () => set({
-        contacts: [],
-        pendingRequests: [],
-        onlineUsers: {},
-        activeChatUserId: null,
-        messages: {}
-    }),
+    incrementUnreadCount: (userId) =>
+        set((state) => ({
+            unreadCount: {
+                ...state.unreadCount,
+                [userId]: (state.unreadCount[userId] || 0) + 1,
+            },
+        })),
+    clearChatState: () =>
+        set({
+            contacts: [],
+            pendingRequests: [],
+            onlineUsers: {},
+            activeChatUserId: null,
+            messages: {},
+            unreadCount: {},
+        }),
 }));

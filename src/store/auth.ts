@@ -34,8 +34,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
     },
     logout: () => {
-        useSessionStore.getState().disconnectSocket();
         useChatStore.getState().clearChatState();
+        useSessionStore.getState().disconnectSocket();
         set({ token: null, isAuthenticated: false, user: null });
     },
 }));

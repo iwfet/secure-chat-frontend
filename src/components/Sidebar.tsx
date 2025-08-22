@@ -40,6 +40,7 @@ export const Sidebar = () => {
         pendingRequests,
         setPendingRequests,
         setActiveChat,
+        unreadCount,
     } = useChatStore();
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
@@ -283,6 +284,8 @@ export const Sidebar = () => {
                         if (!displayUser.id) return null;
 
                         const isOnline = !!onlineUsers[displayUser.id];
+                        const hasUnread = (unreadCount[displayUser.id] || 0) > 0;
+
                         return (
                             <ListItemButton
                                 key={contact.id}
@@ -319,6 +322,9 @@ export const Sidebar = () => {
                                     </Badge>
                                 </ListItemAvatar>
                                 <ListItemText primary={displayUser.username} />
+                                {hasUnread && (
+                                    <Badge color="error" variant="dot" sx={{ml: 2}} />
+                                )}
                             </ListItemButton>
                         );
                     })
