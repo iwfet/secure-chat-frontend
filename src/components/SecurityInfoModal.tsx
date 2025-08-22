@@ -1,29 +1,15 @@
 import React from 'react';
 import {
-    Modal,
-    Box,
-    Typography,
-    Button,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogContentText,
     DialogActions,
+    Button,
+    Box,
+    Typography,
 } from '@mui/material';
-import { Shield, VerifiedUser } from '@mui/icons-material';
-
-const style = {
-    position: 'absolute' as 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 450,
-    bgcolor: 'background.paper',
-    border: '2px solid #fff',
-    boxShadow: 24,
-    p: 4,
-    textAlign: 'center',
-};
+import { VerifiedUser, Shield, Loop } from '@mui/icons-material';
 
 interface SecurityInfoModalProps {
     open: boolean;
@@ -42,6 +28,7 @@ export const SecurityInfoModal = ({
                 sx: {
                     bgcolor: 'background.paper',
                     border: '1px solid #555',
+                    maxWidth: '450px',
                 },
             }}
         >
@@ -56,29 +43,47 @@ export const SecurityInfoModal = ({
                 <VerifiedUser color="success" />[ CONEXÃO SEGURA ESTABELECIDA ]
             </DialogTitle>
             <DialogContent>
-                <DialogContentText sx={{ textAlign: 'justify', color: 'text.secondary' }}>
-                    A sua comunicação utiliza encriptação de ponta-a-ponta (E2EE). Isto
-                    significa que apenas você e o seu contacto podem ler as mensagens.
-                </DialogContentText>
-                <DialogContentText
-                    sx={{ textAlign: 'justify', color: 'text.primary', mt: 2 }}
-                >
-                    <strong>Para garantir 100% de segurança</strong> e proteger-se contra
-                    ataques de interceção, verifique o seu{' '}
-                    <strong>Número de Segurança</strong> clicando no ícone de escudo (
-                    <Shield fontSize="inherit" />) no topo da janela de chat.
-                </DialogContentText>
-                <DialogContentText
-                    sx={{ textAlign: 'justify', color: 'text.secondary', mt: 2 }}
-                >
-                    Compare este número com o seu contacto através de um canal externo
-                    (pessoalmente, por telefone) ou pelo proprio chat no inicio da conversa(nao recomendado). Se os números forem iguais, a sua
-                    conversa é totalmente privada e autenticada.
-                </DialogContentText>
+                <Box sx={{ mt: 1 }}>
+                    <Typography variant="body1" color="text.secondary" gutterBottom>
+                        A sua comunicação utiliza encriptação de ponta-a-ponta (E2EE), o que
+                        significa que apenas você e o seu contacto podem ler as mensagens.
+                    </Typography>
+                </Box>
+
+                <Box sx={{ mt: 3 }}>
+                    <Typography variant="h6" component="h3" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Shield />
+                        Verificação de Segurança
+                    </Typography>
+                    <DialogContentText sx={{ color: 'text.secondary', mt: 1 }}>
+                        Para garantir <strong>100% de privacidade</strong> e proteger-se contra
+                        ataques, verifique o seu <strong>Número de Segurança</strong>.
+                        Clique no ícone de escudo (<Shield fontSize="inherit" />) no topo da
+                        conversa para o ver.
+                    </DialogContentText>
+                    <DialogContentText sx={{ color: 'text.secondary', mt: 1 }}>
+                        {/* Texto Alterado Abaixo */}
+                        A forma mais segura de comparar é através de um{' '}
+                        <strong>canal externo e confiável</strong> (pessoalmente ou por
+                        videochamada). Enviar o número pelo próprio chat é uma opção, mas{' '}
+                        <strong>não é recomendado do ponto de vista da segurança</strong>, pois não protege contra um ataque de interceção ativo.
+                    </DialogContentText>
+                </Box>
+
+                <Box sx={{ mt: 3 }}>
+                    <Typography variant="h6" component="h3" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Loop />
+                        Segurança Contínua
+                    </Typography>
+                    <DialogContentText sx={{ color: 'text.secondary', mt: 1 }}>
+                        Para manter a máxima segurança, é uma boa prática re-verificar o Número de Segurança de tempos em tempos, especialmente se um dos utilizadores reinstalar a aplicação ou mudar de dispositivo.
+                    </DialogContentText>
+                </Box>
+
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} variant="outlined">
-                    Entendi
+            <DialogActions sx={{ p: '16px 24px' }}>
+                <Button onClick={onClose} variant="outlined" fullWidth>
+                    Entendido
                 </Button>
             </DialogActions>
         </Dialog>
