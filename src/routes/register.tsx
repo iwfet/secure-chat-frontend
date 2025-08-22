@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import api from '../api';
 import { Box, Button, TextField, Typography, Container, Link as MuiLink } from '@mui/material';
+import {useNotificationStore} from "../store/notification.ts";
 
 export const Route = createFileRoute('/register')({
     component: RegisterComponent,
@@ -8,6 +9,7 @@ export const Route = createFileRoute('/register')({
 
 function RegisterComponent() {
     const navigate = useNavigate();
+    const showNotification = useNotificationStore((state) => state.showNotification);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -17,11 +19,11 @@ function RegisterComponent() {
 
         try {
             await api.post('/auth/register', { username, password });
-            alert('Registro bem-sucedido! Faça o login.');
+            showNotification('Registo bem-sucedido! Faça o login.', 'success');
             navigate({ to: '/login' });
         } catch (error: any) {
             console.error('Falha no registro', error);
-            alert(error.response?.data?.message || 'Erro desconhecido');
+            showNotification(error.response?.data?.message || 'Erro desconhecido', 'error');
         }
     };
 

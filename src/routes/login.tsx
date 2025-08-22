@@ -4,6 +4,7 @@ import { useSessionStore } from '../store/session';
 import { generateKeyPair } from '../lib/crypto';
 import api from '../api';
 import { Box, Button, TextField, Typography, Container, Link as MuiLink } from '@mui/material';
+import {useNotificationStore} from "../store/notification.ts";
 
 export const Route = createFileRoute('/login')({
     component: LoginComponent,
@@ -13,6 +14,7 @@ function LoginComponent() {
     const navigate = useNavigate();
     const login = useAuthStore((state) => state.login);
     const { setKeys, connectSocket } = useSessionStore();
+    const showNotification = useNotificationStore((state) => state.showNotification);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -33,6 +35,7 @@ function LoginComponent() {
             navigate({ to: '/' });
         } catch (error) {
             console.error('Falha no login', error);
+            showNotification('Utilizador ou senha inválidos.', 'error');
         }
     };
 

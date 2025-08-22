@@ -6,12 +6,14 @@ import { useSessionStore } from '../store/session';
 import { useAuthStore } from '../store/auth';
 import { encryptMessage } from '../lib/crypto';
 import libsodium from 'libsodium-wrappers';
+import {useNotificationStore} from "../store/notification.ts";
 
 export const ChatWindow = () => {
     const { activeChatUserId, messages, addMessage, onlineUsers, contacts } = useChatStore();
     const { socket, privateKey } = useSessionStore();
     const { user } = useAuthStore();
     const [text, setText] = useState('');
+    const showNotification = useNotificationStore((state) => state.showNotification);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,7 +21,7 @@ export const ChatWindow = () => {
 
         const recipient = onlineUsers[activeChatUserId];
         if (!recipient) {
-            alert("O utilizador não está online.");
+            showNotification('O utilizador não está online.', 'warning');
             return;
         }
 
@@ -48,8 +50,8 @@ export const ChatWindow = () => {
     const getContactUsername = (userId: string | null) => {
         if (!userId) return '';
         const contact = contacts.find(c => {
-            if (!c) return false;
-            return c.addressee?.id === userId || c.requester?.id === userId;
+            if (!c || !c.addressee || !c.requester) return false;
+            return c.addressee.id === userId || c.requester.id === userId;
         });
         if (!contact) return userId;
         return contact.addressee.id === userId ? contact.addressee.username : contact.requester.username;

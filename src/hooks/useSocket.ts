@@ -59,8 +59,8 @@ export const useSocket = () => {
         socket.on('newContactAccepted', (payload: { contact: any, isOnline: boolean, publicKey?: string }) => {
             const newContact: Contact = {
                 id: payload.contact.id,
-                requester: user?.userId === payload.contact.id ? payload.contact : {id: user!.userId, username: user!.username},
-                addressee: user?.userId !== payload.contact.id ? payload.contact : {id: user!.userId, username: user!.username},
+                requester: user?.userId === payload.contact.id ? payload.contact : { id: user!.userId, username: user!.username },
+                addressee: user?.userId !== payload.contact.id ? payload.contact : { id: user!.userId, username: user!.username },
                 status: 'accepted'
             };
 

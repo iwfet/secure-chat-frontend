@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { useSessionStore } from './session';
 import { jwtDecode } from 'jwt-decode';
+import {useChatStore} from "./chat.ts";
 
 interface UserPayload {
     userId: string;
@@ -34,6 +35,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
     logout: () => {
         useSessionStore.getState().disconnectSocket();
+        useChatStore.getState().clearChatState();
         set({ token: null, isAuthenticated: false, user: null });
     },
 }));

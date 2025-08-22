@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, List, ListItem, ListItemText, ListItemAvatar, Avatar, Divider, Badge, TextField,
     CircularProgress, IconButton, Paper, InputAdornment, ListItemButton
@@ -9,6 +9,7 @@ import { useNavigate } from '@tanstack/react-router';
 import api from '../api';
 import type {Contact} from "../store/chat.ts";
 import {useChatStore} from "../store/chat.ts";
+import {useNotificationStore} from "../store/notification.ts";
 
 interface SearchResult {
     id: string;
@@ -24,6 +25,7 @@ export const Sidebar = () => {
     } = useChatStore();
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
+    const showNotification = useNotificationStore((state) => state.showNotification);
 
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -49,8 +51,10 @@ export const Sidebar = () => {
     };
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        if (user) {
+            fetchData();
+        }
+    }, [user]);
 
     const handleSearch = async (query: string) => {
         setSearchQuery(query);
@@ -76,21 +80,17 @@ export const Sidebar = () => {
     const handleSendRequest = async (addresseeId: string) => {
         try {
             await api.post('/contacts/requests', { addresseeId });
-            alert('Solicitação enviada com sucesso!');
+            showNotification('Solicitação enviada com sucesso!', 'success');
             setSearchResults(prev => prev.filter(user => user.id !== addresseeId));
         } catch (error: any) {
-            alert(error.response?.data?.message || 'Erro ao enviar solicitação.');
+            showNotification(error.response?.data?.message || 'Erro ao enviar solicitação.', 'error');
         }
     };
 
     const handleRequestResponse = async (contactId: string, action: 'accept' | 'reject') => {
         try {
             await api.put(`/contacts/requests/${contactId}/${action}`);
-            const respondedRequest = pendingRequests.find(req => req.id === contactId);
             setPendingRequests(prev => prev.filter(req => req.id !== contactId));
-            if (action === 'accept' && respondedRequest) {
-                setContacts([...contacts, { ...respondedRequest, status: 'accepted' }]);
-            }
         } catch (error) {
             console.error(`Erro ao ${action} a solicitação`, error);
         }
