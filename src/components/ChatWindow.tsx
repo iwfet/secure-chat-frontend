@@ -82,6 +82,7 @@ export const ChatWindow = ({ isMobile }: ChatWindowProps) => {
                     justifyContent: 'center',
                     textAlign: 'center',
                     p: 2,
+                    height: '100vh',
                 }}
             >
                 <IconButton onClick={toggleSidebar} sx={{mb: 2}}>
@@ -121,7 +122,7 @@ export const ChatWindow = ({ isMobile }: ChatWindowProps) => {
                     display: 'flex',
                     flexDirection: 'column',
                     height: '100vh',
-                    width: isMobile ? '100vw' : 'auto',
+                    width: '100%',
                 }}
             >
                 <Paper
@@ -134,7 +135,7 @@ export const ChatWindow = ({ isMobile }: ChatWindowProps) => {
                         alignItems: 'center',
                     }}
                 >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
                         {isMobile && (
                             <IconButton title="Abrir Contatos" onClick={toggleSidebar}>
                                 <MenuIcon />
@@ -149,7 +150,7 @@ export const ChatWindow = ({ isMobile }: ChatWindowProps) => {
                     </IconButton>
                 </Paper>
 
-                <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column-reverse' }}>
+                <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column-reverse', minHeight: 0, }}>
                     <Box>
                         {currentMessages.map((msg) => (
                             <Box key={msg.id} sx={{ display: 'flex', justifyContent: msg.isMine ? 'flex-end' : 'flex-start', mb: 1 }}>
