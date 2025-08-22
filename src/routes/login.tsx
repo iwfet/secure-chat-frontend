@@ -5,7 +5,7 @@ import { generateKeyPair } from '../lib/crypto';
 import api from '../api';
 import { Box, Button, TextField, Typography, Container, Link as MuiLink } from '@mui/material';
 import { useNotificationStore } from '../store/notification';
-import { useLoadingStore } from '../store/loading'; // Importar a loja do loader
+import { useLoadingStore } from '../store/loading';
 
 export const Route = createFileRoute('/login')({
     component: LoginComponent,
@@ -16,11 +16,11 @@ function LoginComponent() {
     const login = useAuthStore((state) => state.login);
     const { setKeys, connectSocket } = useSessionStore();
     const showNotification = useNotificationStore((state) => state.showNotification);
-    const { showLoader, hideLoader } = useLoadingStore(); // Obter as funções do loader
+    const { showLoader, hideLoader } = useLoadingStore();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        showLoader('A gerar conexão segura, aguarde...'); // Ativar o loader global
+        showLoader('A gerar conexão segura, aguarde...');
         const formData = new FormData(event.currentTarget);
         const username = formData.get('username') as string;
         const password = formData.get('password') as string;
@@ -30,16 +30,18 @@ function LoginComponent() {
             const token = response.data.access_token;
             login(token);
 
+            // Gera o par de chaves usando a Web Crypto API
             const keyPair = await generateKeyPair();
             setKeys(keyPair.publicKey, keyPair.privateKey);
 
+            // Conecta o socket passando o objeto CryptoKey
             connectSocket(token, keyPair.publicKey);
 
             navigate({ to: '/' });
         } catch (error) {
             showNotification('Utilizador ou senha inválidos.', 'error');
         } finally {
-            hideLoader(); // Desativar o loader global no final
+            hideLoader();
         }
     };
 

@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Box, Typography, Paper, TextField, IconButton } from '@mui/material';
 import { Send } from '@mui/icons-material';
 import { useChatStore } from '../store/chat';
 import { useSessionStore } from '../store/session';
 import { useAuthStore } from '../store/auth';
 import { encryptMessage } from '../lib/crypto';
-import libsodium from 'libsodium-wrappers';
-import {useNotificationStore} from "../store/notification.ts";
+import { useNotificationStore } from "../store/notification.ts";
 
 export const ChatWindow = () => {
     const { activeChatUserId, messages, addMessage, onlineUsers, contacts } = useChatStore();
@@ -14,6 +13,16 @@ export const ChatWindow = () => {
     const { user } = useAuthStore();
     const [text, setText] = useState('');
     const showNotification = useNotificationStore((state) => state.showNotification);
+
+    const activeChatUsername = useMemo(() => {
+        if (!activeChatUserId) return '';
+        const contact = contacts.find(c => {
+            if (!c?.addressee || !c?.requester) return false;
+            return c.addressee.id === activeChatUserId || c.requester.id === activeChatUserId;
+        });
+        if (!contact) return activeChatUserId;
+        return contact.addressee.id === activeChatUserId ? contact.addressee.username : contact.requester.username;
+    }, [activeChatUserId, contacts]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,8 +35,8 @@ export const ChatWindow = () => {
         }
 
         try {
-            const recipientPublicKey = libsodium.from_base64(recipient.publicKey);
-            const encryptedContent = await encryptMessage(text, privateKey, recipientPublicKey);
+            // Encripta a mensagem usando a chave pública (Base64) do destinatário
+            const encryptedContent = await encryptMessage(text, privateKey, recipient.publicKey);
 
             socket.emit('sendMessage', {
                 toSocketId: recipient.socketId,
@@ -44,18 +53,9 @@ export const ChatWindow = () => {
             setText('');
         } catch (error) {
             console.error("Erro ao criptografar ou enviar mensagem:", error);
+            showNotification('Ocorreu um erro ao enviar a mensagem.', 'error');
         }
     };
-
-    const getContactUsername = (userId: string | null) => {
-        if (!userId) return '';
-        const contact = contacts.find(c => {
-            if (!c || !c.addressee || !c.requester) return false;
-            return c.addressee.id === userId || c.requester.id === userId;
-        });
-        if (!contact) return userId;
-        return contact.addressee.id === userId ? contact.addressee.username : contact.requester.username;
-    }
 
     if (!activeChatUserId) {
         return (
@@ -72,7 +72,7 @@ export const ChatWindow = () => {
     return (
         <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100vh' }}>
             <Paper elevation={3} sx={{ p: 2, borderBottom: '1px solid #333' }}>
-                <Typography variant="h6">[ Chat com: {getContactUsername(activeChatUserId)} ]</Typography>
+                <Typography variant="h6">[ Chat com: {activeChatUsername} ]</Typography>
             </Paper>
 
             <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column-reverse' }}>
