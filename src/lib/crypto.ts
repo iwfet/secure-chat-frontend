@@ -10,7 +10,7 @@ export const generateKeyPair = async (): Promise<CryptoKeyPair> => {
             name: ALGORITHM,
             namedCurve: CURVE,
         },
-        false, // Chave não é extraível!
+        false,
         ['deriveKey']
     );
     return keyPair;
@@ -105,4 +105,34 @@ export const decryptMessage = async (
         encryptedContent
     );
     return new TextDecoder().decode(decryptedContent);
+};
+
+
+export const generateSafetyNumber = async (myPublicKey: CryptoKey, theirPublicKeyB64: string): Promise<string> => {
+    const theirPublicKey = await importPublicKey(theirPublicKeyB64);
+
+    const myExported = await window.crypto.subtle.exportKey('spki', myPublicKey);
+    const theirExported = await window.crypto.subtle.exportKey('spki', theirPublicKey);
+
+    const myExportedBytes = new Uint8Array(myExported);
+    const theirExportedBytes = new Uint8Array(theirExported);
+
+    const combined = new Uint8Array(myExportedBytes.length + theirExportedBytes.length);
+    if (btoa(String.fromCharCode(...myExportedBytes)) < btoa(String.fromCharCode(...theirExportedBytes))) {
+        combined.set(myExportedBytes);
+        combined.set(theirExportedBytes, myExportedBytes.length);
+    } else {
+        combined.set(theirExportedBytes);
+        combined.set(myExportedBytes, theirExportedBytes.length);
+    }
+
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', combined);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+    return hashArray
+        .map(b => b.toString().padStart(3, '0'))
+        .join('')
+        .substring(0, 30) // Pega os primeiros 30 dígitos
+        .replace(/(\d{5})/g, '$1 ') // Adiciona um espaço a cada 5 dígitos
+        .trim();
 };
