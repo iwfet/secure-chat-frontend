@@ -1,16 +1,26 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Typography, Paper, TextField, IconButton } from '@mui/material';
-import { Send, ShieldOutlined } from '@mui/icons-material';
+import { Send, ShieldOutlined, Menu as MenuIcon } from '@mui/icons-material';
 import { useChatStore } from '../store/chat';
 import { useSessionStore } from '../store/session';
 import { useAuthStore } from '../store/auth';
 import { encryptMessage } from '../lib/crypto';
 import { useNotificationStore } from '../store/notification.ts';
-import { VerificationModal } from './VerificationModal'; // Importar o novo modal
+import { VerificationModal } from './VerificationModal';
 
-export const ChatWindow = () => {
-    const { activeChatUserId, messages, addMessage, onlineUsers, contacts } =
-        useChatStore();
+interface ChatWindowProps {
+    isMobile: boolean;
+}
+
+export const ChatWindow = ({ isMobile }: ChatWindowProps) => {
+    const {
+        activeChatUserId,
+        messages,
+        addMessage,
+        onlineUsers,
+        contacts,
+        toggleSidebar,
+    } = useChatStore();
     const { socket, privateKey } = useSessionStore();
     const { user } = useAuthStore();
     const [text, setText] = useState('');
@@ -21,9 +31,7 @@ export const ChatWindow = () => {
         if (!activeChatUserId) return '';
         const contact = contacts.find((c) => {
             if (!c?.addressee || !c?.requester) return false;
-            return (
-                c.addressee.id === activeChatUserId || c.requester.id === activeChatUserId
-            );
+            return c.addressee.id === activeChatUserId || c.requester.id === activeChatUserId;
         });
         if (!contact) return activeChatUserId;
         return contact.addressee.id === activeChatUserId
@@ -33,8 +41,7 @@ export const ChatWindow = () => {
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!text.trim() || !socket || !privateKey || !activeChatUserId || !user)
-            return;
+        if (!text.trim() || !socket || !privateKey || !activeChatUserId || !user) return;
 
         const recipient = onlineUsers[activeChatUserId];
         if (!recipient) {
@@ -43,11 +50,7 @@ export const ChatWindow = () => {
         }
 
         try {
-            const encryptedContent = await encryptMessage(
-                text,
-                privateKey,
-                recipient.publicKey,
-            );
+            const encryptedContent = await encryptMessage(text, privateKey, recipient.publicKey);
 
             socket.emit('sendMessage', {
                 toSocketId: recipient.socketId,
@@ -68,7 +71,30 @@ export const ChatWindow = () => {
         }
     };
 
-    if (!activeChatUserId) {
+    if (!activeChatUserId && isMobile) {
+        return (
+            <Box
+                sx={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    p: 2,
+                }}
+            >
+                <IconButton onClick={toggleSidebar} sx={{mb: 2}}>
+                    <MenuIcon sx={{fontSize: '2rem'}} />
+                </IconButton>
+                <Typography variant="h5" sx={{ color: 'text.secondary' }}>
+                    [ SELECIONE UMA CONEXÃO ]
+                </Typography>
+            </Box>
+        )
+    }
+
+    if (!activeChatUserId && !isMobile) {
         return (
             <Box
                 sx={{
@@ -85,7 +111,7 @@ export const ChatWindow = () => {
         );
     }
 
-    const currentMessages = messages[activeChatUserId] || [];
+    const currentMessages = activeChatUserId ? messages[activeChatUserId] || [] : [];
 
     return (
         <>
@@ -95,6 +121,7 @@ export const ChatWindow = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     height: '100vh',
+                    width: isMobile ? '100vw' : 'auto',
                 }}
             >
                 <Paper
@@ -107,40 +134,32 @@ export const ChatWindow = () => {
                         alignItems: 'center',
                     }}
                 >
-                    <Typography variant="h6">[ Chat com: {activeChatUsername} ]</Typography>
-                    <IconButton
-                        title="Verificar Número de Segurança"
-                        onClick={() => setVerificationModalOpen(true)}
-                    >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {isMobile && (
+                            <IconButton title="Abrir Contatos" onClick={toggleSidebar}>
+                                <MenuIcon />
+                            </IconButton>
+                        )}
+                        <Typography variant="h6" noWrap>
+                            [ Chat com: {activeChatUsername} ]
+                        </Typography>
+                    </Box>
+                    <IconButton title="Verificar Número de Segurança" onClick={() => setVerificationModalOpen(true)}>
                         <ShieldOutlined />
                     </IconButton>
                 </Paper>
 
-                <Box
-                    sx={{
-                        flexGrow: 1,
-                        overflowY: 'auto',
-                        p: 2,
-                        display: 'flex',
-                        flexDirection: 'column-reverse',
-                    }}
-                >
+                <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column-reverse' }}>
                     <Box>
                         {currentMessages.map((msg) => (
-                            <Box
-                                key={msg.id}
-                                sx={{
-                                    display: 'flex',
-                                    justifyContent: msg.isMine ? 'flex-end' : 'flex-start',
-                                    mb: 1,
-                                }}
-                            >
+                            <Box key={msg.id} sx={{ display: 'flex', justifyContent: msg.isMine ? 'flex-end' : 'flex-start', mb: 1 }}>
                                 <Paper
                                     elevation={2}
                                     sx={{
                                         p: 1.5,
                                         bgcolor: msg.isMine ? '#2e2e2e' : 'background.paper',
-                                        maxWidth: '70%',
+                                        maxWidth: '80%',
+                                        wordWrap: 'break-word',
                                     }}
                                 >
                                     <Typography variant="body1">{msg.content}</Typography>
@@ -150,11 +169,7 @@ export const ChatWindow = () => {
                     </Box>
                 </Box>
 
-                <Box
-                    sx={{ p: 2, borderTop: '1px solid #333' }}
-                    component="form"
-                    onSubmit={handleSendMessage}
-                >
+                <Box sx={{ p: 2, borderTop: '1px solid #333' }} component="form" onSubmit={handleSendMessage}>
                     <Paper sx={{ display: 'flex', alignItems: 'center', p: '2px 4px' }}>
                         <TextField
                             fullWidth

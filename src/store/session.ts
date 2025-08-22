@@ -11,6 +11,8 @@ interface SessionState {
     disconnectSocket: () => void;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export const useSessionStore = create<SessionState>((set) => ({
     publicKey: null,
     privateKey: null,
@@ -18,7 +20,7 @@ export const useSessionStore = create<SessionState>((set) => ({
     setKeys: (publicKey, privateKey) => set({ publicKey, privateKey }),
     connectSocket: async (token, publicKey) => {
         const publicKeyB64 = await exportPublicKey(publicKey);
-        const newSocket = io('http://localhost:5000', {
+        const newSocket = io(API_URL, {
             auth: {
                 token,
                 publicKey: publicKeyB64,

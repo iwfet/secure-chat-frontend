@@ -15,6 +15,7 @@ import {
     Paper,
     InputAdornment,
     ListItemButton,
+    Drawer,
 } from '@mui/material';
 import { Search, Add, Check, Close, Logout, Refresh } from '@mui/icons-material';
 import { useAuthStore } from '../store/auth';
@@ -24,15 +25,14 @@ import type { Contact } from '../store/chat.ts';
 import { useChatStore } from '../store/chat.ts';
 import { useNotificationStore } from '../store/notification.ts';
 
-interface SearchResult {
-    id: string;
-    username: string;
+interface SidebarProps {
+    isMobile: boolean;
 }
 
 const getAvatarUrl = (seed: string) =>
     `https://api.dicebear.com/8.x/bottts/svg?seed=${seed}`;
 
-export const Sidebar = () => {
+export const Sidebar = ({ isMobile }: SidebarProps) => {
     const {
         contacts,
         setContacts,
@@ -41,6 +41,8 @@ export const Sidebar = () => {
         setPendingRequests,
         setActiveChat,
         unreadCount,
+        isSidebarOpen,
+        toggleSidebar,
     } = useChatStore();
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
@@ -48,7 +50,7 @@ export const Sidebar = () => {
 
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+    const [searchResults, setSearchResults] = useState<{ id: string; username: string }[]>([]);
     const [isSearching, setIsSearching] = useState(false);
 
     const fetchData = async () => {
@@ -85,9 +87,7 @@ export const Sidebar = () => {
             setIsSearching(true);
             const res = await api.get(`/users/search?username=${query}`);
             if (user?.userId) {
-                setSearchResults(
-                    res.data.filter((u: SearchResult) => u.id !== user.userId),
-                );
+                setSearchResults(res.data.filter((u: { id: string }) => u.id !== user.userId));
             } else {
                 setSearchResults(res.data);
             }
@@ -104,10 +104,7 @@ export const Sidebar = () => {
             showNotification('Solicitação enviada com sucesso!', 'success');
             setSearchResults((prev) => prev.filter((user) => user.id !== addresseeId));
         } catch (error: any) {
-            showNotification(
-                error.response?.data?.message || 'Erro ao enviar solicitação.',
-                'error',
-            );
+            showNotification(error.response?.data?.message || 'Erro ao enviar solicitação.', 'error');
         }
     };
 
@@ -116,7 +113,10 @@ export const Sidebar = () => {
         action: 'accept' | 'reject',
     ) => {
         try {
-            await api.put(`/contacts/requests/${contactId}/${action}`);
+            const response = await api.put(`/contacts/requests/${contactId}/${action}`);
+            if (action === 'accept') {
+                setContacts([...contacts, response.data]);
+            }
             setPendingRequests((prev) => prev.filter((req) => req.id !== contactId));
         } catch (error) {
             console.error(`Erro ao ${action} a solicitação`, error);
@@ -128,9 +128,7 @@ export const Sidebar = () => {
             return { id: '', username: 'Contato Inválido' };
         }
         const otherUser =
-            contact.requester.id !== user?.userId
-                ? contact.requester
-                : contact.addressee;
+            contact.requester.id !== user?.userId ? contact.requester : contact.addressee;
         return {
             id: otherUser.id,
             username: otherUser.username,
@@ -142,13 +140,14 @@ export const Sidebar = () => {
         navigate({ to: '/login' });
     };
 
-    return (
+    const SidebarContent = (
         <Box
             sx={{
-                width: 320,
+                width: isMobile ? '80vw' : 320,
+                maxWidth: 320,
                 height: '100vh',
                 bgcolor: 'background.paper',
-                borderRight: '1px solid #333',
+                borderRight: isMobile ? 'none' : '1px solid #333',
                 display: 'flex',
                 flexDirection: 'column',
             }}
@@ -184,19 +183,13 @@ export const Sidebar = () => {
                                 <ListItem
                                     key={u.id}
                                     secondaryAction={
-                                        <IconButton
-                                            edge="end"
-                                            onClick={() => handleSendRequest(u.id)}
-                                        >
+                                        <IconButton edge="end" onClick={() => handleSendRequest(u.id)}>
                                             <Add />
                                         </IconButton>
                                     }
                                 >
                                     <ListItemAvatar>
-                                        <Avatar
-                                            sx={{ width: 32, height: 32 }}
-                                            src={getAvatarUrl(u.username)}
-                                        />
+                                        <Avatar sx={{ width: 32, height: 32 }} src={getAvatarUrl(u.username)} />
                                     </ListItemAvatar>
                                     <ListItemText primary={u.username} />
                                 </ListItem>
@@ -206,17 +199,9 @@ export const Sidebar = () => {
                 )}
             </Box>
             <Divider />
-
             {Array.isArray(pendingRequests) && pendingRequests.length > 0 && (
                 <>
-                    <Box
-                        p={2}
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                        }}
-                    >
+                    <Box p={2} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography variant="h6">[ PEDIDOS PENDENTES ]</Typography>
                         <IconButton onClick={fetchData} size="small" title="Recarregar dados">
                             <Refresh />
@@ -228,28 +213,17 @@ export const Sidebar = () => {
                                 key={req.id}
                                 secondaryAction={
                                     <>
-                                        <IconButton
-                                            edge="end"
-                                            color="success"
-                                            onClick={() => handleRequestResponse(req.id, 'accept')}
-                                        >
+                                        <IconButton edge="end" color="success" onClick={() => handleRequestResponse(req.id, 'accept')}>
                                             <Check />
                                         </IconButton>
-                                        <IconButton
-                                            edge="end"
-                                            color="error"
-                                            onClick={() => handleRequestResponse(req.id, 'reject')}
-                                        >
+                                        <IconButton edge="end" color="error" onClick={() => handleRequestResponse(req.id, 'reject')}>
                                             <Close />
                                         </IconButton>
                                     </>
                                 }
                             >
                                 <ListItemAvatar>
-                                    <Avatar
-                                        sx={{ width: 32, height: 32 }}
-                                        src={getAvatarUrl(req.requester.username)}
-                                    />
+                                    <Avatar sx={{ width: 32, height: 32 }} src={getAvatarUrl(req.requester.username)} />
                                 </ListItemAvatar>
                                 <ListItemText primary={req.requester.username} />
                             </ListItem>
@@ -258,15 +232,7 @@ export const Sidebar = () => {
                     <Divider />
                 </>
             )}
-
-            <Box
-                p={2}
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}
-            >
+            <Box p={2} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6">[ CONEXÕES SEGURAS ]</Typography>
                 {(!pendingRequests || pendingRequests.length === 0) && (
                     <IconButton onClick={fetchData} size="small" title="Recarregar dados">
@@ -276,7 +242,7 @@ export const Sidebar = () => {
             </Box>
             <List sx={{ flexGrow: 1, overflowY: 'auto' }}>
                 {loading ? (
-                    <CircularProgress sx={{ mx: 'auto', mt: 4 }} />
+                    <CircularProgress sx={{ display: 'block', mx: 'auto', mt: 4 }} />
                 ) : (
                     Array.isArray(contacts) &&
                     contacts.map((contact) => {
@@ -287,10 +253,7 @@ export const Sidebar = () => {
                         const hasUnread = (unreadCount[displayUser.id] || 0) > 0;
 
                         return (
-                            <ListItemButton
-                                key={contact.id}
-                                onClick={() => setActiveChat(displayUser.id)}
-                            >
+                            <ListItemButton key={contact.id} onClick={() => setActiveChat(displayUser.id)}>
                                 <ListItemAvatar>
                                     <Badge
                                         overlap="circular"
@@ -315,37 +278,21 @@ export const Sidebar = () => {
                                             },
                                         }}
                                     >
-                                        <Avatar
-                                            alt={displayUser.username}
-                                            src={getAvatarUrl(displayUser.username)}
-                                        />
+                                        <Avatar alt={displayUser.username} src={getAvatarUrl(displayUser.username)} />
                                     </Badge>
                                 </ListItemAvatar>
                                 <ListItemText primary={displayUser.username} />
-                                {hasUnread && (
-                                    <Badge color="error" variant="dot" sx={{ml: 2}} />
-                                )}
+                                {hasUnread && <Badge color="error" variant="dot" sx={{ ml: 2 }} />}
                             </ListItemButton>
                         );
                     })
                 )}
             </List>
             <Divider />
-
             <Box p={2}>
-                <Paper
-                    sx={{
-                        p: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                    }}
-                >
+                <Paper sx={{ p: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar
-                            sx={{ width: 32, height: 32, mr: 1 }}
-                            src={getAvatarUrl(user?.username || 'user')}
-                        />
+                        <Avatar sx={{ width: 32, height: 32, mr: 1 }} src={getAvatarUrl(user?.username || 'user')} />
                         <Typography>{user?.username}</Typography>
                     </Box>
                     <IconButton title="Logout" onClick={handleLogout}>
@@ -355,4 +302,14 @@ export const Sidebar = () => {
             </Box>
         </Box>
     );
+
+    if (isMobile) {
+        return (
+            <Drawer open={isSidebarOpen} onClose={toggleSidebar} >
+                {SidebarContent}
+            </Drawer>
+        );
+    }
+
+    return SidebarContent;
 };

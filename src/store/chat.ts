@@ -27,6 +27,7 @@ interface ChatState {
     activeChatUserId: string | null;
     messages: Record<string, Message[]>;
     unreadCount: Record<string, number>;
+    isSidebarOpen: boolean;
     setContacts: (contacts: Contact[]) => void;
     setPendingRequests: (requests: Contact[]) => void;
     addOnlineUser: (user: OnlineUser) => void;
@@ -34,6 +35,7 @@ interface ChatState {
     setActiveChat: (userId: string | null) => void;
     addMessage: (userId: string, message: Message) => void;
     incrementUnreadCount: (userId: string) => void;
+    toggleSidebar: () => void;
     clearChatState: () => void;
 }
 
@@ -44,6 +46,7 @@ export const useChatStore = create<ChatState>((set) => ({
     activeChatUserId: null,
     messages: {},
     unreadCount: {},
+    isSidebarOpen: false,
     setContacts: (contacts) => set({ contacts }),
     setPendingRequests: (requests) => set({ pendingRequests: requests }),
     addOnlineUser: (user) =>
@@ -62,7 +65,7 @@ export const useChatStore = create<ChatState>((set) => ({
             if (userId) {
                 delete newUnreadCount[userId];
             }
-            return { activeChatUserId: userId, unreadCount: newUnreadCount };
+            return { activeChatUserId: userId, unreadCount: newUnreadCount, isSidebarOpen: false };
         }),
     addMessage: (userId, message) =>
         set((state) => ({
@@ -78,6 +81,7 @@ export const useChatStore = create<ChatState>((set) => ({
                 [userId]: (state.unreadCount[userId] || 0) + 1,
             },
         })),
+    toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
     clearChatState: () =>
         set({
             contacts: [],
@@ -86,5 +90,6 @@ export const useChatStore = create<ChatState>((set) => ({
             activeChatUserId: null,
             messages: {},
             unreadCount: {},
+            isSidebarOpen: false,
         }),
 }));

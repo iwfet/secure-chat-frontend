@@ -1,11 +1,10 @@
 import { createTheme } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
 
 const hackerTheme = createTheme({
     palette: {
         mode: 'dark',
         primary: {
-            main: '#00ff41', // Verde hacker
+            main: '#00ff41',
         },
         background: {
             default: '#000000',
@@ -30,9 +29,17 @@ const hackerTheme = createTheme({
         },
         h5: {
             animation: 'glitch 1.5s linear infinite',
+            fontSize: '1.5rem',
+            '@media (min-width:600px)': {
+                fontSize: '1.75rem',
+            },
         },
         h6: {
             animation: 'glitch 2.5s linear infinite alternate-reverse',
+            fontSize: '1.25rem',
+            '@media (min-width:600px)': {
+                fontSize: '1.5rem',
+            },
         },
     },
     components: {
