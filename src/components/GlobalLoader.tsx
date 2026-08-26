@@ -1,4 +1,3 @@
-import React from 'react';
 import { Backdrop, CircularProgress, Typography, Box } from '@mui/material';
 import { useLoadingStore } from '../store/loading';
 

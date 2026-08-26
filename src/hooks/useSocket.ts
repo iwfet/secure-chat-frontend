@@ -26,7 +26,7 @@ export const useSocket = () => {
     useEffect(() => {
         if (!socket) return;
 
-        const handleSocketError = (error: Error) => {
+        const handleSocketError = () => {
             if (isAuthenticated) {
                 logout();
             }
@@ -86,7 +86,7 @@ export const useSocket = () => {
                 if (message.fromUserId !== activeChatUserId) {
                     incrementUnreadCount(message.fromUserId);
                 }
-            } catch (error) {
+            } catch {
                 // Silently ignore
             }
         };

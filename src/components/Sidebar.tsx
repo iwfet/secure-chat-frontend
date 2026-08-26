@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -117,7 +117,7 @@ export const Sidebar = ({ isMobile }: SidebarProps) => {
             if (action === 'accept') {
                 setContacts([...contacts, response.data]);
             }
-            setPendingRequests((prev) => prev.filter((req) => req.id !== contactId));
+            setPendingRequests(pendingRequests.filter((req) => req.id !== contactId));
         } catch (error) {
             console.error(`Erro ao ${action} a solicitação`, error);
         }

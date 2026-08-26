@@ -5,7 +5,7 @@ import { useNotificationStore } from '../store/notification';
 export const GlobalNotification = () => {
     const { open, message, severity, hideNotification } = useNotificationStore();
 
-    const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    const handleClose = (_event?: React.SyntheticEvent | Event, reason?: string) => {
         if (reason === 'clickaway') {
             return;
         }

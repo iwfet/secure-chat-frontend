@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Box, Typography, CircularProgress } from '@mui/material';
 import { useSessionStore } from '../store/session';
 import { useChatStore } from '../store/chat';
